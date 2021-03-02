@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+# PL power off/on script
+# PL sequencer at 0x68
+
+import sys
+import subprocess
+
+#confirm we are running on kv260 - TBD
+
+arguments = len(sys.argv) - 1
+if arguments != 1:
+        print('Invalid arguments')
+        print('som-pwrctl.py --help #For options')
+        sys.exit()
+
+if sys.argv[1] == "--off":
+        # Write '0x00' to PL sequencer power register for PL switch off
+        output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w2@0x68", "0x08", "0x00"], capture_output=True)
+        print (output)
+elif sys.argv[1] == "--on":
+        # Write '0x3E' to PL sequencer power register for PL switch on
+        output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w2@0x68", "0x08", "0x3E"], capture_output=True)
+        print (output)
+elif sys.argv[1] == "--status":
+        # Read PL sequencer power register
+        output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w1@0x68", "0x08", "r1@0x68"], capture_output=True)
+        print (output)
+        off = b'0x00\n'
+        on = b'0x3e\n'
+        if output.stdout == off:
+                print('PL is off')
+        elif output.stdout == on:
+                print('PL is on')
+elif sys.argv[1] == "--help":
+        print('som-pwrctl.py --off #For PL shutdown' '\n''som-pwrctl.py --on #For PL powerup''\n' 'som-pwrctl.py --status #For PL power status')
+else:
+        print('som-pwrctl.py --help #For options')
+
