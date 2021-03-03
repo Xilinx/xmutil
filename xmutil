@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+# Copyright (C) 2010 - 2020 Xilinx, Inc.  All rights reserved.
+
+# SPDX-License-Identifier: MIT
+"""
+
 import subprocess, argparse
 
 cmds = { 'boardid':'/usr/bin/fru-print.py', \
