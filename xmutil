@@ -17,7 +17,6 @@ cmds = { 'boardid':'/usr/bin/fru-print.py', \
 	'perfmon':'', \
 	'ddrqos':'', \
 	'axiqos':'', \
-	'bist':'' \
 	}
 
 #have separate functions for each, in case some preprocessing/specialcommand/prints needed
@@ -58,9 +57,6 @@ def ddrqos(args):
 def axiqos(args):
     subprocess.run([cmds['axiqos']]+args)
 
-def bist(args):
-    subprocess.run([cmds['bist']]+args)
-
 
 def top(cmd,args):
     globals()[cmd[0]](args)
@@ -79,7 +75,7 @@ ddrqos: Utility for changing configuration of PS DDR quality of service (QoS) se
 axiqos: Utility for changing configuration of PS/PL AXI interface quality of service (QoS) settings. Initial implementation focuses on AXI port read/write priority configurations. \n\n',\
 
     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('cmd', choices=['boardid','bootfw','bootfwupd','getpkgs','listapps','loadapp','unloadapp','perfmon','ddrqos','axiqos','bist'], type=str, nargs=1,help='Enter a function')
+    parser.add_argument('cmd', choices=['boardid','bootfw','bootfwupd','getpkgs','listapps','loadapp','unloadapp','perfmon','ddrqos','axiqos'], type=str, nargs=1,help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     top(args.cmd,args.args)
