@@ -14,9 +14,10 @@ cmds = { 'boardid':'/usr/bin/fru-print.py', \
 	'listapps':'dfx-mgr-client', \
 	'loadapp':'dfx-mgr-client', \
 	'unloadapp':'dfx-mgr-client', \
-	'perfmon':'', \
+	'platformstats':'/usr/bin/platformstats', \
 	'ddrqos':'', \
 	'axiqos':'', \
+	'pwrctl':'/usr/bin/som-pwrctl' \
 	}
 
 #have separate functions for each, in case some preprocessing/specialcommand/prints needed
@@ -48,8 +49,8 @@ def loadapp(args):
 def unloadapp(args):
     subprocess.run([cmds['unloadapp'],'-remove'])
 
-def perfmon(args):
-    subprocess.run([cmds['perfmon']]+args)
+def platformstats(args):
+    subprocess.run([cmds['platformstats']]+args)
 
 def ddrqos(args):
     subprocess.run([cmds['ddrqos']]+args)
@@ -57,6 +58,8 @@ def ddrqos(args):
 def axiqos(args):
     subprocess.run([cmds['axiqos']]+args)
 
+def pwrctl(args):
+    subprocess.run([cmds['pwrctl']]+args)
 
 def top(cmd,args):
     globals()[cmd[0]](args)
@@ -70,12 +73,13 @@ getpkgs: Queries Xilinx package feeds and provides summary to CLI of relevant pa
 listapps: Queries on target HW resource manager daemon of pre-built apps available on the platform and provides summary to CLI.\n\n\
 loadapp: Loads integrated HW+SW application inclusive of bitstream and starts the corresponding pre-built app SW executable.\n\n\
 unloadapp: Removes accelerated application inclusive of unloading its bitstream. (Takes no argument) \n\n\
-perfmon: Reads and prints a summary of the following performance related information:\n\tCPU frequency & utilization statistics for each physical core\n\tRAM utilization\n\tDDR controller bandwidth & operational frequency\n\tTemperature(s) reported by SysMon\n\tSOM overall current & power utilization reported by SOM current monitor IC\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
-ddrqos: Utility for changing configuration of PS DDR quality of service (QoS) settings including. Initial implementation focuses on PS DDR memory controller “traffic class” configuration.\n\n\
-axiqos: Utility for changing configuration of PS/PL AXI interface quality of service (QoS) settings. Initial implementation focuses on AXI port read/write priority configurations. \n\n',\
+platformstats: Reads and prints a summary of the following performance related information:\n\tCPU Utilization for each configured CPU\n\tRAM utilization\n\tSwap memory Utilization\n\tSOM overall current, power, voltage utilization\n\tSysMon Temperatures(s)\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
+ddrqos: Set QOS value for DDR slots on zynqmp platform\n\n\
+axiqos: Set QOS value for AXI ports on zynqmp platform. \n\n\
+pwrctl: PL power control utility.\n\n',\
 
     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('cmd', choices=['boardid','bootfw','bootfwupd','getpkgs','listapps','loadapp','unloadapp','perfmon','ddrqos','axiqos'], type=str, nargs=1,help='Enter a function')
+    parser.add_argument('cmd', choices=['boardid','bootfw','bootfwupd','getpkgs','listapps','loadapp','unloadapp','platformstats','ddrqos','axiqos','pwrctl'], type=str, nargs=1,help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     top(args.cmd,args.args)
