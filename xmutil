@@ -35,10 +35,10 @@ def getpkgs(args):
     if ('-h' in args) or ('--help' in args):
         print("\ngetpkgs will use fru-print to determine the SOM + CC combination\nand search the package feed for compatible packagegroups\n")
         exit()
-    som=subprocess.getoutput("fru-print.py -b som -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'")
+    somnum=subprocess.getoutput("fru-print.py -b som -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'| sed 's/[^0-9]*//g'")
     cc=subprocess.getoutput("fru-print.py -b cc -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'")
-    print("\nSearching package feed for packagegroups compatible with: " + som+'_'+cc+'\n')
-    subprocess.run('dnf list --available | grep packagegroup-' +som +'-'+ cc +'- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"' ,shell=True)
+    print("\nSearching package feed for packagegroups compatible with: " +cc+somnum+'0\n')
+    subprocess.run('dnf list --available | grep packagegroup-' +cc+somnum +'0- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"' ,shell=True)
 
 def listapps(args):
     subprocess.run([cmds['listapps'],'-listPackage'])
