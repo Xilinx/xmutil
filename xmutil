@@ -9,8 +9,8 @@
 import subprocess, argparse
 
 cmds = { 'boardid':'/usr/bin/fru-print.py', \
-        'bootfw':'', \
-	'bootfwupd':'', \
+	'bootfw_status':'/usr/bin/image_update', \
+	'bootfw_update':'/usr/bin/image_update', \
 	'listapps':'dfx-mgr-client', \
 	'loadapp':'dfx-mgr-client', \
 	'unloadapp':'dfx-mgr-client', \
@@ -25,11 +25,11 @@ cmds = { 'boardid':'/usr/bin/fru-print.py', \
 def boardid(args):
     subprocess.run([cmds['boardid']]+args)
 
-def bootfw(args):
-    subprocess.run([cmds['bootfw']]+args)
+def bootfw_status(args):
+    subprocess.run([cmds['bootfw_status'],'-p'])
 
-def bootfwupd(args):
-    subprocess.run([cmds['bootfwupd']]+args)
+def bootfw_update(args):
+    subprocess.run([cmds['bootfw_update']]+args)
 
 def getpkgs(args):
     if ('-h' in args) or ('--help' in args):
@@ -67,8 +67,8 @@ def top(cmd,args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='\n\
 boardid: Reads all board EEPROM contents. Prints information summary in human readable structure to CLI.\n\t-b\tPick which board to print fru data for\n\t-f\tEnter field to print\n\t-s\tEnter som EEPROM path\n\t-c\tEnter cc EEPROM path\n\n\
-bootfw: Reads primary boot device information. Prints A/B status information, image IDs, and checksums to CLI.\n\n\
-bootfwupd: Updates the primary boot device with a new boot.bin in the inactive partition (either A or B).\n\n\
+bootfw_status: Prints Qspi MFG version and date info along with persistent state values.\n\n\
+bootfw_update: Updates the primary boot device with a new boot.bin in the inactive partition (either A or B).\n\n\
 getpkgs: Queries Xilinx package feeds and provides summary to CLI of relevant packages for active platform based on board ID information.\n\n\
 listapps: Queries on target HW resource manager daemon of pre-built apps available on the platform and provides summary to CLI.\n\n\
 loadapp: Loads integrated HW+SW application inclusive of bitstream and starts the corresponding pre-built app SW executable.\n\n\
@@ -79,7 +79,7 @@ axiqos: Set QOS value for AXI ports on zynqmp platform. \n\n\
 pwrctl: PL power control utility.\n\n',\
 
     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('cmd', choices=['boardid','bootfw','bootfwupd','getpkgs','listapps','loadapp','unloadapp','platformstats','ddrqos','axiqos','pwrctl'], type=str, nargs=1,help='Enter a function')
+    parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','platformstats','ddrqos','axiqos','pwrctl'], type=str, nargs=1,help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     top(args.cmd,args.args)
