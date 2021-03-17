@@ -15,8 +15,8 @@ cmds = { 'boardid':'/usr/bin/fru-print.py', \
 	'loadapp':'dfx-mgr-client', \
 	'unloadapp':'dfx-mgr-client', \
 	'platformstats':'/usr/bin/platformstats', \
-	'ddrqos':'', \
-	'axiqos':'', \
+	'ddrqos':'/usr/bin/ddr-qos', \
+	'axiqos':'/usr/bin/axi-qos', \
 	'pwrctl':'/usr/bin/som-pwrctl' \
 	}
 
