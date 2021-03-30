@@ -17,7 +17,7 @@ import subprocess
 arguments = len(sys.argv) - 1
 if arguments != 1:
         print('Invalid arguments')
-        print('som-pwrctl.py --help #For options')
+        print('som-pwrctl --help #For options')
         sys.exit()
 
 if sys.argv[1] == "--off":
@@ -31,7 +31,6 @@ elif sys.argv[1] == "--on":
 elif sys.argv[1] == "--status":
         # Read PL sequencer power register
         output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w1@0x68", "0x08", "r1@0x68"], capture_output=True)
-        print (output)
         off = b'0x00\n'
         on = b'0x3e\n'
         if output.stdout == off:
@@ -39,7 +38,7 @@ elif sys.argv[1] == "--status":
         elif output.stdout == on:
                 print('PL is on')
 elif sys.argv[1] == "--help":
-        print('som-pwrctl.py --off #For PL shutdown' '\n''som-pwrctl.py --on #For PL powerup''\n' 'som-pwrctl.py --status #For PL power status')
+        print('som-pwrctl --off #For PL shutdown' '\n''som-pwrctl --on #For PL powerup''\n' 'som-pwrctl --status #For PL power status')
 else:
-        print('som-pwrctl.py --help #For options')
+        print('som-pwrctl --help #For options')
 
