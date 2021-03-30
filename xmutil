@@ -68,7 +68,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='\n\
 boardid: Reads all board EEPROM contents. Prints information summary in human readable structure to CLI.\n\t-b\tPick which board to print fru data for\n\t-f\tEnter field to print\n\t-s\tEnter som EEPROM path\n\t-c\tEnter cc EEPROM path\n\n\
 bootfw_status: Prints Qspi MFG version and date info along with persistent state values.\n\n\
-bootfw_update: Updates the primary boot device with a new boot.bin in the inactive partition (either A or B).\n\n\
+bootfw_update: Updates the primary boot device with a new BOOT.BIN in the inactive partition (either A or B).\n\n\
 getpkgs: Queries Xilinx package feeds and provides summary to CLI of relevant packages for active platform based on board ID information.\n\n\
 listapps: Queries on target HW resource manager daemon of pre-built apps available on the platform and provides summary to CLI.\n\n\
 loadapp: Loads integrated HW+SW application inclusive of bitstream and starts the corresponding pre-built app SW executable.\n\n\
