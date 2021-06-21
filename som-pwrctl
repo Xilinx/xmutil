@@ -11,6 +11,8 @@
 
 import sys
 import subprocess
+import os
+import glob
 
 #confirm we are running on kv260 - TBD
 
@@ -20,17 +22,32 @@ if arguments != 1:
         print('som-pwrctl --help #For options')
         sys.exit()
 
+# i2c sysfs path
+i2c_buses = glob.glob('/sys/bus/i2c/devices/i2c-*')
+
+i2c_bus_num = '0'
+# Sequencers attached to Cadence I2C at ff030000 for SOM
+str_to_match = b'Cadence I2C at ff030000\n'
+
+# Detect the bus number on which PL sequencer is present
+for i2c_bus in i2c_buses:
+        path = i2c_bus + "/name"
+        output = subprocess.run(["cat", path], capture_output=True)
+        if output.stdout == str_to_match:
+                i2c_bus_num = i2c_bus.replace("/sys/bus/i2c/devices/i2c-","")
+                break
+
 if sys.argv[1] == "--off":
         # Write '0x00' to PL sequencer power register for PL switch off
-        output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w2@0x68", "0x08", "0x00"], capture_output=True)
+        output = subprocess.run(["i2ctransfer", "-y", "-f", i2c_bus_num, "w2@0x68", "0x08", "0x00"], capture_output=True)
         print (output)
 elif sys.argv[1] == "--on":
         # Write '0x3E' to PL sequencer power register for PL switch on
-        output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w2@0x68", "0x08", "0x3E"], capture_output=True)
+        output = subprocess.run(["i2ctransfer", "-y", "-f", i2c_bus_num, "w2@0x68", "0x08", "0x3E"], capture_output=True)
         print (output)
 elif sys.argv[1] == "--status":
         # Read PL sequencer power register
-        output = subprocess.run(["i2ctransfer", "-y", "-f", "0", "w1@0x68", "0x08", "r1@0x68"], capture_output=True)
+        output = subprocess.run(["i2ctransfer", "-y", "-f", i2c_bus_num, "w1@0x68", "0x08", "r1@0x68"], capture_output=True)
         off = b'0x00\n'
         on = b'0x3e\n'
         if output.stdout == off:
