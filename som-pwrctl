@@ -47,9 +47,9 @@ elif sys.argv[1] == "--on":
         print (output)
 elif sys.argv[1] == "--status":
         # Read PL sequencer power register
-        output = subprocess.run(["i2ctransfer", "-y", "-f", i2c_bus_num, "w1@0x68", "0x08", "r1@0x68"], capture_output=True)
-        off = b'0x00\n'
-        on = b'0x3e\n'
+        output = subprocess.run(["i2ctransfer", "-y", "-f", i2c_bus_num, "w1@0x68", "0xF5", "r1@0x68"], capture_output=True)
+        off = b'0x04\n'
+        on = b'0x9A\n'
         if output.stdout == off:
                 print('PL is off')
         elif output.stdout == on:
