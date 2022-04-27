@@ -47,7 +47,7 @@ def loadapp(args):
     subprocess.run([cmds['loadapp'],'-load']+args)
 
 def unloadapp(args):
-    subprocess.run([cmds['unloadapp'],'-remove'])
+    subprocess.run([cmds['unloadapp'],'-remove']+args)
 
 def platformstats(args):
     subprocess.run([cmds['platformstats']]+args)
@@ -72,7 +72,7 @@ bootfw_update: Updates the primary boot device with a new BOOT.BIN in the inacti
 getpkgs: Queries Xilinx package feeds and provides summary to CLI of relevant packages for active platform based on board ID information.\n\n\
 listapps: Queries on target HW resource manager daemon of pre-built apps available on the platform and provides summary to CLI.\n\n\
 loadapp: Loads integrated HW+SW application inclusive of bitstream and starts the corresponding pre-built app SW executable.\n\n\
-unloadapp: Removes accelerated application inclusive of unloading its bitstream. (Takes no argument) \n\n\
+unloadapp: Removes accelerated application inclusive of unloading its bitstream. (Takes slot number, default 0) \n\n\
 platformstats: Reads and prints a summary of the following performance related information:\n\tCPU Utilization for each configured CPU\n\tRAM utilization\n\tSwap memory Utilization\n\tSOM overall current, power, voltage utilization\n\tSysMon Temperatures(s)\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
 ddrqos: Set QOS value for DDR slots on zynqmp platform\n\n\
 axiqos: Set QOS value for AXI ports on zynqmp platform. \n\n\
