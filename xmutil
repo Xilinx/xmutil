@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 """
 
-import subprocess, argparse
+import subprocess, argparse, distro
 
 cmds = { 'boardid':'/usr/bin/fru-print.py', \
 	'bootfw_status':'/usr/bin/image_update', \
@@ -38,7 +38,10 @@ def getpkgs(args):
     somnum=subprocess.getoutput("fru-print.py -b som -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'| sed 's/[^0-9]*//g'")
     cc=subprocess.getoutput("fru-print.py -b cc -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'")
     print("\nSearching package feed for packagegroups compatible with: " +cc+somnum+'0\n')
-    subprocess.run('dnf list --available | grep packagegroup-' +cc+somnum +'0- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"' ,shell=True)
+    if distro.id() == 'ubuntu':
+        subprocess.run('apt search packagegroup-' +cc+somnum +'0- 2>/dev/null | grep ' +cc+somnum,shell=True)
+    elif distro.id() == 'petalinux':
+        subprocess.run('dnf list --available | grep packagegroup-' +cc+somnum +'0- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"' ,shell=True)
 
 def listapps(args):
     subprocess.run([cmds['listapps'],'-listPackage'])
