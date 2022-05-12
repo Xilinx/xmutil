@@ -49,10 +49,10 @@ elif sys.argv[1] == "--status":
         # Read PL sequencer power register
         output = subprocess.run(["i2ctransfer", "-y", "-f", i2c_bus_num, "w1@0x68", "0xF5", "r1@0x68"], capture_output=True)
         off = b'0x04\n'
-        on = b'0x9A\n'
-        if output.stdout == off:
+        on = b'0x9a\n'
+        if output.stdout.lower() == off:
                 print('PL is off')
-        elif output.stdout == on:
+        elif output.stdout.lower() == on:
                 print('PL is on')
 elif sys.argv[1] == "--help":
         print('som-pwrctl --off #For PL shutdown' '\n''som-pwrctl --on #For PL powerup''\n' 'som-pwrctl --status #For PL power status')
