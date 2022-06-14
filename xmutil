@@ -37,9 +37,9 @@ def getpkgs(args):
         exit()
     somnum=subprocess.getoutput("fru-print -b som -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'| sed 's/[^0-9]*//g'")
     cc=subprocess.getoutput("fru-print -b cc -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'")
-    print("\nSearching package feed for packagegroups compatible with: " +cc+somnum+'0\n')
+    print("\nSearching package feed for packages compatible with: " +cc+somnum+'0\n')
     if distro.id() == 'ubuntu':
-        subprocess.run('apt search packagegroup-' +cc+somnum +'0- 2>/dev/null | grep ' +cc+somnum,shell=True)
+        subprocess.run('apt search xlnx-app-' +cc+somnum +'0- 2>/dev/null | grep ' +cc+somnum,shell=True)
     elif distro.id() == 'petalinux':
         subprocess.run('dnf list --available | grep packagegroup-' +cc+somnum +'0- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"' ,shell=True)
 
