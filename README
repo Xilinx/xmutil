@@ -30,15 +30,15 @@ xmutil getpkgs
 
 xmutil listapps
 
-	Queries on target HW resource manager daemon of pre-built apps available on the platform and provides summary to CLI.
+	Queries on target FW resource manager daemon of pre-built app bitstreams available on the platform and provides summary to CLI.
 
 xmutil loadapp
 
-	Loads integrated HW+SW application inclusive of bitstream and starts the corresponding pre-built app SW executable.
+	Loads requested application configuration bitstream to programmable logic if the device is available.
 
 xmutil unloadapp
 
-	Removes accelerated application inclusive of unloading its bitstream.
+	Removes application bitstream. (Takes slot number, default 0)
 
 xmutil perfmon
 
