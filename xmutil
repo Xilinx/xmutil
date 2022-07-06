@@ -17,7 +17,11 @@ cmds = { 'boardid':'/usr/bin/fru-print', \
 	'platformstats':'/usr/bin/platformstats', \
 	'ddrqos':'/usr/bin/ddr-qos', \
 	'axiqos':'/usr/bin/axi-qos', \
-	'pwrctl':'/usr/bin/som-pwrctl' \
+	'pwrctl':'/usr/bin/som-pwrctl', \
+	'desktop_disable':'/usr/bin/systemctl', \
+	'desktop_enable':'/usr/bin/systemctl', \
+	'dp_unbind':'/usr/bin/echo', \
+	'dp_bind':'/usr/bin/echo' \
 	}
 
 #have separate functions for each, in case some preprocessing/specialcommand/prints needed
@@ -67,6 +71,18 @@ def pwrctl(args):
 def top(cmd,args):
     globals()[cmd[0]](args)
 
+def desktop_disable(args):
+    subprocess.run([cmds['desktop_disable']]+['isolate multi-user.target'])
+
+def desktop_enable(args):
+    subprocess.run([cmds['desktop_enable']]+['isolate graphical.target'])
+
+def dp_unbind(args):
+    subprocess.run([cmds['dp_unbind']]+['-n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind'])
+
+def dp_bind(args):
+    subprocess.run([cmds['dp_bind']]+['-n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind'])
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='\n\
 boardid: Reads all board EEPROM contents. Prints information summary in human readable structure to CLI.\n\t-b\tPick which board to print fru data for\n\t-f\tEnter field to print\n\t-s\tEnter som EEPROM path\n\t-c\tEnter cc EEPROM path\n\n\
@@ -79,10 +95,14 @@ unloadapp: Removes application bitstream. (Takes slot number, default 0) \n\n\
 platformstats: Reads and prints a summary of the following performance related information:\n\tCPU Utilization for each configured CPU\n\tRAM utilization\n\tSwap memory Utilization\n\tSOM overall current, power, voltage utilization\n\tSysMon Temperatures(s)\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
 ddrqos: Set QOS value for DDR slots on zynqmp platform\n\n\
 axiqos: Set QOS value for AXI ports on zynqmp platform. \n\n\
-pwrctl: PL power control utility.\n\n',\
+pwrctl: PL power control utility.\n\n\
+desktop_disable: Disable the desktop.\n\n\
+desktop_enable: Enable the desktop.\n\n\
+dp_unbind: Unbind the display driver.\n\n\
+dp_bind: Bind the display driver.\n\n',\
 
     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','platformstats','ddrqos','axiqos','pwrctl'], type=str, nargs=1,help='Enter a function')
+    parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','platformstats','ddrqos','axiqos','pwrctl','desktop_disable','desktop_enable','dp_unbind','dp_bind'], type=str, nargs=1,help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     top(args.cmd,args.args)
