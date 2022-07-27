@@ -18,10 +18,6 @@ cmds = { 'boardid':'/usr/bin/fru-print', \
 	'ddrqos':'/usr/bin/ddr-qos', \
 	'axiqos':'/usr/bin/axi-qos', \
 	'pwrctl':'/usr/bin/som-pwrctl', \
-	'desktop_disable':'/usr/bin/systemctl', \
-	'desktop_enable':'/usr/bin/systemctl', \
-	'dp_unbind':'/usr/bin/echo', \
-	'dp_bind':'/usr/bin/echo' \
 	}
 
 #have separate functions for each, in case some preprocessing/specialcommand/prints needed
@@ -72,16 +68,16 @@ def top(cmd,args):
     globals()[cmd[0]](args)
 
 def desktop_disable(args):
-    subprocess.run([cmds['desktop_disable']]+['isolate multi-user.target'])
+    subprocess.run('systemctl isolate multi-user.target', shell=True)
 
 def desktop_enable(args):
-    subprocess.run([cmds['desktop_enable']]+['isolate graphical.target'])
+    subprocess.run('systemctl isolate graphical.target', shell=True)
 
 def dp_unbind(args):
-    subprocess.run([cmds['dp_unbind']]+['-n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind'])
+    subprocess.run('echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind', shell=True)
 
 def dp_bind(args):
-    subprocess.run([cmds['dp_bind']]+['-n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind'])
+    subprocess.run('echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='\n\
