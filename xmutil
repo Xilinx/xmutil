@@ -14,7 +14,7 @@ cmds = { 'boardid':'/usr/bin/fru-print', \
 	'listapps':'dfx-mgr-client', \
 	'loadapp':'dfx-mgr-client', \
 	'unloadapp':'dfx-mgr-client', \
-	'platformstats':'/usr/bin/platformstats', \
+	'xlnx_platformstats':'/usr/bin/xlnx_platformstats', \
 	'ddrqos':'/usr/bin/ddr-qos', \
 	'axiqos':'/usr/bin/axi-qos', \
 	'pwrctl':'/usr/bin/som-pwrctl', \
@@ -52,8 +52,8 @@ def loadapp(args):
 def unloadapp(args):
     subprocess.run([cmds['unloadapp'],'-remove']+args)
 
-def platformstats(args):
-    subprocess.run([cmds['platformstats']]+args)
+def xlnx_platformstats(args):
+    subprocess.run([cmds['xlnx_platformstats']]+args)
 
 def ddrqos(args):
     subprocess.run([cmds['ddrqos']]+args)
@@ -88,7 +88,7 @@ getpkgs: Queries Xilinx package feeds and provides summary to CLI of relevant pa
 listapps: Queries on target FW resource manager daemon of pre-built app bitstreams available on the platform and provides summary to CLI.\n\n\
 loadapp: Loads requested application configuration bitstream to programmable logic if the device is available.\n\n\
 unloadapp: Removes application bitstream. (Takes slot number, default 0) \n\n\
-platformstats: Reads and prints a summary of the following performance related information:\n\tCPU Utilization for each configured CPU\n\tRAM utilization\n\tSwap memory Utilization\n\tSOM overall current, power, voltage utilization\n\tSysMon Temperatures(s)\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
+xlnx_platformstats: Reads and prints a summary of the following performance related information:\n\tCPU Utilization for each configured CPU\n\tRAM utilization\n\tSwap memory Utilization\n\tSOM overall current, power, voltage utilization\n\tSysMon Temperatures(s)\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
 ddrqos: Set QOS value for DDR slots on zynqmp platform\n\n\
 axiqos: Set QOS value for AXI ports on zynqmp platform. \n\n\
 pwrctl: PL power control utility.\n\n\
@@ -98,7 +98,7 @@ dp_unbind: Unbind the display driver.\n\n\
 dp_bind: Bind the display driver.\n\n',\
 
     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','platformstats','ddrqos','axiqos','pwrctl','desktop_disable','desktop_enable','dp_unbind','dp_bind'], type=str, nargs=1,help='Enter a function')
+    parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','xlnx_platformstats','ddrqos','axiqos','pwrctl','desktop_disable','desktop_enable','dp_unbind','dp_bind'], type=str, nargs=1,help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     top(args.cmd,args.args)
