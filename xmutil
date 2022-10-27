@@ -17,7 +17,7 @@ cmds = { 'boardid':'/usr/bin/fru-print', \
 	'xlnx_platformstats':'/usr/bin/xlnx_platformstats', \
 	'ddrqos':'/usr/bin/ddr-qos', \
 	'axiqos':'/usr/bin/axi-qos', \
-	'pwrctl':'/usr/bin/som-pwrctl', \
+	'pwrctl':'/usr/bin/kria-pwrctl', \
 	}
 
 #have separate functions for each, in case some preprocessing/specialcommand/prints needed

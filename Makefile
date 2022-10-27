@@ -10,7 +10,7 @@ all:
 
 install:
 	$(INSTALL_PROGRAM) -D -m 755 xmutil $(DESTDIR)$(bindir)/xmutil
-	$(INSTALL_PROGRAM) -D -m 755 som-pwrctl $(DESTDIR)$(bindir)/som-pwrctl
+	$(INSTALL_PROGRAM) -D -m 755 kria-pwrctl $(DESTDIR)$(bindir)/kria-pwrctl
 
 clean:
 

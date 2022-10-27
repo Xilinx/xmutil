@@ -19,14 +19,14 @@ import glob
 arguments = len(sys.argv) - 1
 if arguments != 1:
         print('Invalid arguments')
-        print('som-pwrctl --help #For options')
+        print('kria-pwrctl --help #For options')
         sys.exit()
 
 # i2c sysfs path
 i2c_buses = glob.glob('/sys/bus/i2c/devices/i2c-*')
 
 i2c_bus_num = '0'
-# Sequencers attached to Cadence I2C at ff030000 for SOM
+# Sequencers attached to Cadence I2C at ff030000 for Kria
 str_to_match = b'Cadence I2C at ff030000\n'
 
 # Detect the bus number on which PL sequencer is present
@@ -55,7 +55,7 @@ elif sys.argv[1] == "--status":
         elif output.stdout.lower() == on:
                 print('PL is on')
 elif sys.argv[1] == "--help":
-        print('som-pwrctl --off #For PL shutdown' '\n''som-pwrctl --on #For PL powerup''\n' 'som-pwrctl --status #For PL power status')
+        print('kria-pwrctl --off #For PL shutdown' '\n''kria-pwrctl --on #For PL powerup''\n' 'kria-pwrctl --status #For PL power status')
 else:
-        print('som-pwrctl --help #For options')
+        print('kria-pwrctl --help #For options')
 
