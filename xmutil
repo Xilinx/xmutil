@@ -6,9 +6,9 @@
 # SPDX-License-Identifier: MIT
 """
 
-import subprocess, argparse, distro
+import subprocess, argparse, distro, re, glob, sys
 
-cmds = { 'boardid':'/usr/bin/fru-print', \
+cmds = { 'boardid':'/usr/bin/ipmi-fru', \
 	'bootfw_status':'/usr/bin/image_update', \
 	'bootfw_update':'/usr/bin/image_update', \
 	'listapps':'dfx-mgr-client', \
@@ -20,10 +20,126 @@ cmds = { 'boardid':'/usr/bin/fru-print', \
 	'pwrctl':'/usr/bin/som-pwrctl', \
 	}
 
-#have separate functions for each, in case some preprocessing/specialcommand/prints needed
-#separate functions not necessarily needed, can run straight from top function
+def pcie_format(match):
+    pcie = match.group(1)
+    if pcie is not None:
+        pcie = pcie.replace('h','').replace(' ','')
+        return f"""FRU Board PCIe Info:
+    Vendor ID: {pcie[0:4]}
+    Device ID: {pcie[4:8]}
+    SubVendor ID: {pcie[8:12]}
+    SubDevice ID: {pcie[12:16]}
+"""
+
+def uuid_format(match):
+    uuid = match.group(1)
+    if uuid is not None:
+        return "FRU Board UUID: " + uuid.replace('h','').replace(' ','')
+
+def board_custom_format(fru):
+    # Common for all Xilinx boards
+    fru = fru.replace('FRU Board Custom Info:', 'FRU Board Revision Number:', 1)
+    fru = fru.replace('FRU Board Custom Info:', 'FRU Board PCIe Info:', 1)
+    fru = re.sub('FRU Board PCIe Info:(.*)\n', pcie_format, fru)
+    fru = fru.replace('FRU Board Custom Info:', 'FRU Board UUID:', 1)
+    fru = re.sub('FRU Board UUID:(.*)\n', uuid_format, fru)
+    return fru
+
+def mac_format(fru):
+    # Kria SOM specific interpratation of MAC record
+    if re.search('FRU Board Product Name: SM.*',fru):
+        fru = fru.replace('FRU OEM MAC ID 0:', 'FRU OEM PS MAC ID 0:', 1)
+    # Kria Carrier card specific interpretation of MAC record
+    prod = re.search('FRU Board Product Name: SCK-(.*)-G', fru)
+    if prod and prod.group(1) == 'KR':
+        fru = fru.replace('FRU OEM MAC ID 0:', 'FRU OEM PS MAC ID 1:', 1)
+        fru = fru.replace('FRU OEM MAC ID 1:', 'FRU OEM PL MAC ID 0:', 1)
+        fru = fru.replace('FRU OEM MAC ID 2:', 'FRU OEM PL MAC ID 1:', 1)
+    elif prod and prod.group(1) == 'KD':
+        fru = fru.replace('FRU OEM MAC ID 0:', 'FRU OEM PL MAC ID 0:', 1)
+        fru = fru.replace('FRU OEM MAC ID 1:', 'FRU OEM PL MAC ID 1:', 1)
+    return fru
+
+def free_form_format(fru):
+    # Kria SOM specific interpratation of MAC record
+    if re.search('FRU Board Product Name: SM.*', fru):
+        fru = fru.replace('FRU OEM Memory:', 'FRU OEM Primary Boot Device:', 1)
+        fru = fru.replace('FRU OEM Memory:', 'FRU OEM Secondary Boot Device:', 1)
+        fru = fru.replace('FRU OEM Memory:', 'FRU OEM PS DDR Memory:', 1)
+        fru = fru.replace('FRU OEM Memory:', 'FRU OEM PL DDR Memory:', 1)
+    return fru
+
+def boardid_format(fru):
+    # Xilinx specific interpretation of custom board info
+    fru = board_custom_format(fru)
+    # Xilinx specific interpretation of MAC record
+    fru = mac_format(fru)
+    # Xilinx specific interpretation of free form record
+    fru = free_form_format(fru)
+    return fru
+
+def get_eeprom(args):
+    eeprom = []
+    for arg in args:
+        if '--fru-file' in arg:
+            eeprom.append(arg.split('=')[1])
+
+    if not eeprom:
+        eeprom = glob.glob('/sys/devices/platform/axi/*.i2c/*/*/eeprom')
+
+    if not eeprom:
+        sys.exit('No EEPROM nodes found')
+
+    return eeprom
+
 def boardid(args):
-    subprocess.run([cmds['boardid']]+args)
+    ignore = False
+    if any('--ignore-errors' in arg for arg in args):
+        ignore = True
+
+    for file in get_eeprom(args):
+        ret, fru = subprocess.getstatusoutput(cmds['boardid'] + \
+            ' --fru-file=' + file + ' --interpret-oem-data')
+        if not ignore and ret != 0:
+            sys.exit('ipmi-fru returned error code ' + str(ret))
+        elif fru:
+            print('\n' + boardid_format(fru))
+
+    print('')
+
+def product_name(args):
+    ignore = False
+    if any('--ignore-errors' in arg for arg in args):
+        ignore = True
+
+    prod = ''
+    som = ''
+    carrier = ''
+    for file in get_eeprom(args):
+        ret, fru = subprocess.getstatusoutput(cmds['boardid'] + \
+            ' --fru-file=' + file + ' --interpret-oem-data')
+        if not ignore and ret != 0:
+            sys.exit('ipmi-fru returned error code ' + str(ret))
+        elif fru:
+            # Kria SOM
+            match = re.search('FRU Board Product Name: SM.*-K(.*)-.*', fru)
+            if match:
+                som = match.group(1)
+                continue
+            # Kria Carrier Card
+            match = re.search('FRU Board Product Name: SCK-(.*)-G', fru)
+            if match:
+                carrier = match.group(1).lower()
+                continue
+            # Other Xilinx Board
+            match = re.search('FRU Board Product Name: (.*)', fru)
+            if match:
+                prod = match.group(1).lower()
+
+    if som and carrier:
+        prod = carrier + som + '0'
+
+    return prod
 
 def bootfw_status(args):
     subprocess.run([cmds['bootfw_status'],'-p'])
@@ -33,15 +149,14 @@ def bootfw_update(args):
 
 def getpkgs(args):
     if ('-h' in args) or ('--help' in args):
-        print("\ngetpkgs will use fru-print to determine the SOM + CC combination\nand search the package feed for compatible packagegroups\n")
+        print("\ngetpkgs will use ipmi-fru to determine the target platform\nand search the package feed for compatible packagegroups\n")
         exit()
-    somnum=subprocess.getoutput("fru-print -b som -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'| sed 's/[^0-9]*//g'")
-    cc=subprocess.getoutput("fru-print -b cc -f product | awk -F- '{ print $2}' | tr '[:upper:]' '[:lower:]'")
-    print("\nSearching package feed for packages compatible with: " +cc+somnum+'0\n')
+    prod = product_name(args)
+    print("\nSearching package feed for packages compatible with: " + prod + '\n')
     if distro.id() == 'ubuntu':
-        subprocess.run('apt search xlnx-app-' +cc+somnum +'0- 2>/dev/null',shell=True)
+        subprocess.run('apt search xlnx-app-' + prod + '- 2>/dev/null',shell=True)
     elif distro.id() == 'petalinux':
-        subprocess.run('dnf list --available | grep packagegroup-' +cc+somnum +'0- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"' ,shell=True)
+        subprocess.run('dnf list --available | grep packagegroup-' + prod + '- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"',shell=True)
 
 def listapps(args):
     subprocess.run([cmds['listapps'],'-listPackage'])
@@ -81,10 +196,10 @@ def dp_bind(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='\n\
-boardid: Reads all board EEPROM contents. Prints information summary in human readable structure to CLI.\n\t-b\tPick which board to print fru data for\n\t-f\tEnter field to print\n\t-s\tEnter som EEPROM path\n\t-c\tEnter cc EEPROM path\n\n\
+boardid: Reads FRU data based on EEPROM or file and prints information in human readable format.\n\t--fru-file=<file>\tPass a <file> containing fru data\n\t--ignore-errors\t\tIgnore errors returned by fru-ipmi and print returned output\n\n\
 bootfw_status: Prints Qspi MFG version and date info along with persistent state values.\n\n\
 bootfw_update: Updates the primary boot device with a new BOOT.BIN in the inactive partition (either A or B).\n\n\
-getpkgs: Queries Xilinx package feeds and provides summary to CLI of relevant packages for active platform based on board ID information.\n\n\
+getpkgs: Queries Xilinx package feeds and provides summary of relevant packages for active platform based on board ID information.\n\t--fru-file=<file>\tPass a <file> containing fru data\n\t--ignore-errors\t\tIgnore errors returned by fru-ipmi and print returned output\n\n\
 listapps: Queries on target FW resource manager daemon of pre-built app bitstreams available on the platform and provides summary to CLI.\n\n\
 loadapp: Loads requested application configuration bitstream to programmable logic if the device is available.\n\n\
 unloadapp: Removes application bitstream. (Takes slot number, default 0) \n\n\
@@ -102,4 +217,3 @@ dp_bind: Bind the display driver.\n\n',\
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     top(args.cmd,args.args)
-
