@@ -58,21 +58,5 @@ xmutil axiqos
 
 	Utility for changing configuration of PS/PL AXI interface quality of service (QoS) settings. Initial implementation focuses on AXI port read/write priority configurations.
 
-xmutil bist
-
-	Built in self-test utility for simple board diagnostics with pass/fail results for:
-
-		Board power checks
-		Read all PMIC measurements, compare to expected min/max
-		Read all SysMon power measurements, compare to expected min/max
-		Read SOM 5V current draw, compare to expected min/max
-		Clock frequency check
-		DDR4 memory test
-		QSPI memory test
-		eMMC/SD memory test
-		EEPROM contents valid check
-		I2C slave device checks (PS I2C bus only)
-		Temperature(s) reported by SysMon within expected values
-
 
 Help menu for each tool can be accessed with -h/--help
