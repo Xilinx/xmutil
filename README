@@ -58,5 +58,24 @@ xmutil axiqos
 
 	Utility for changing configuration of PS/PL AXI interface quality of service (QoS) settings. Initial implementation focuses on AXI port read/write priority configurations.
 
+xmutil pwrctl
+
+	PL power control utility.
+
+xmutil desktop_disable
+
+	Disable the desktop.
+
+xmutil desktop_enable
+
+	Enable the desktop.
+
+xmutil dp_unbind
+
+	Unbind the display driver.
+
+xmutil dp_bind
+
+	Bind the display driver.
 
 Help menu for each tool can be accessed with -h/--help
