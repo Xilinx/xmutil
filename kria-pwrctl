@@ -23,9 +23,13 @@ done
 
 case $1 in
     --on ) # Write '0x3E' to PL sequencer power register for PL switch on
-        i2ctransfer -y -f "${i2c_bus_num}" w2@0x68 0x08 0x3E ;;
+        i2ctransfer -y -f "${i2c_bus_num}" w2@0x68 0x08 0x3E
+	# PMU call for PL node request
+        time echo pm_request_node 69 > /sys/kernel/debug/zynqmp-firmware/pm ;;
         
-    --off ) # Write '0x00' to PL sequencer power register for PL switch off
+    --off ) # PMU call for PL node release
+        time echo pm_release_node 69 > /sys/kernel/debug/zynqmp-firmware/pm
+	# Write '0x00' to PL sequencer power register for PL switch off
         i2ctransfer -y -f "${i2c_bus_num}" w2@0x68 0x08 0x00 ;;
 
     --status ) # Read PL sequencer power register
