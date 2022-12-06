@@ -8,7 +8,7 @@
 
 import subprocess, argparse, distro, re, glob, sys
 
-cmds = { 'boardid':'/usr/bin/ipmi-fru', \
+cmds = { 'boardid':'/usr/sbin/ipmi-fru', \
 	'bootfw_status':'/usr/bin/image_update', \
 	'bootfw_update':'/usr/bin/image_update', \
 	'listapps':'dfx-mgr-client', \
