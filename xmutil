@@ -101,7 +101,8 @@ def boardid(args):
         ret, fru = subprocess.getstatusoutput(cmds['boardid'] + \
             ' --fru-file=' + file + ' --interpret-oem-data')
         if not ignore and ret != 0:
-            sys.exit('ipmi-fru returned error code ' + str(ret))
+            print(fru)
+            sys.exit('\nipmi-fru returned error code ' + str(ret))
         elif fru:
             print('\n' + boardid_format(fru))
 
@@ -119,7 +120,7 @@ def product_name(args):
         ret, fru = subprocess.getstatusoutput(cmds['boardid'] + \
             ' --fru-file=' + file + ' --interpret-oem-data')
         if not ignore and ret != 0:
-            sys.exit('ipmi-fru returned error code ' + str(ret))
+            raise RuntimeError('ipmi-fru returned error code ' + str(ret))
         elif fru:
             # Kria SOM
             match = re.search('FRU Board Product Name: SM.*-K(.*)-.*', fru)
@@ -151,7 +152,10 @@ def getpkgs(args):
     if ('-h' in args) or ('--help' in args):
         print("\ngetpkgs will use ipmi-fru to determine the target platform\nand search the package feed for compatible packagegroups\n")
         exit()
-    prod = product_name(args)
+    try:
+        prod = product_name(args)
+    except:
+        sys.exit("No valid product name found, can't search package feed")
     print("\nSearching package feed for packages compatible with: " + prod + '\n')
     if distro.id() == 'ubuntu':
         subprocess.run('apt search xlnx-app-' + prod + '- 2>/dev/null',shell=True)
