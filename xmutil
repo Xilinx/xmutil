@@ -13,22 +13,23 @@ import glob
 import sys
 import distro
 
-cmds = { 'boardid':'/usr/sbin/ipmi-fru', \
-	'bootfw_status':'/usr/bin/image_update', \
-	'bootfw_update':'/usr/bin/image_update', \
-	'listapps':'dfx-mgr-client', \
-	'loadapp':'dfx-mgr-client', \
-	'unloadapp':'dfx-mgr-client', \
-	'xlnx_platformstats':'/usr/bin/xlnx_platformstats', \
-	'ddrqos':'/usr/bin/ddr-qos', \
-	'axiqos':'/usr/bin/axi-qos', \
-	'pwrctl':'/usr/bin/kria-pwrctl', \
-	}
+cmds = {'boardid': '/usr/sbin/ipmi-fru',
+        'bootfw_status': '/usr/bin/image_update',
+        'bootfw_update': '/usr/bin/image_update',
+        'listapps': 'dfx-mgr-client',
+        'loadapp': 'dfx-mgr-client',
+        'unloadapp': 'dfx-mgr-client',
+        'xlnx_platformstats': '/usr/bin/xlnx_platformstats',
+        'ddrqos': '/usr/bin/ddr-qos',
+        'axiqos': '/usr/bin/axi-qos',
+        'pwrctl': '/usr/bin/kria-pwrctl',
+        }
+
 
 def pcie_format(match):
     pcie = match.group(1)
     if pcie is not None:
-        pcie = pcie.replace('h','').replace(' ','')
+        pcie = pcie.replace('h', '').replace(' ', '')
         return f"""FRU Board PCIe Info:
     Vendor ID: {pcie[0:4]}
     Device ID: {pcie[4:8]}
@@ -36,23 +37,27 @@ def pcie_format(match):
     SubDevice ID: {pcie[12:16]}
 """
 
+
 def uuid_format(match):
     uuid = match.group(1)
     if uuid is not None:
-        return "FRU Board UUID: " + uuid.replace('h','').replace(' ','')
+        return "FRU Board UUID: " + uuid.replace('h', '').replace(' ', '')
+
 
 def board_custom_format(fru):
     # Common for all Xilinx boards
-    fru = fru.replace('FRU Board Custom Info:', 'FRU Board Revision Number:', 1)
+    fru = fru.replace('FRU Board Custom Info:',
+                      'FRU Board Revision Number:', 1)
     fru = fru.replace('FRU Board Custom Info:', 'FRU Board PCIe Info:', 1)
     fru = re.sub('FRU Board PCIe Info:(.*)\n', pcie_format, fru)
     fru = fru.replace('FRU Board Custom Info:', 'FRU Board UUID:', 1)
     fru = re.sub('FRU Board UUID:(.*)\n', uuid_format, fru)
     return fru
 
+
 def mac_format(fru):
     # Kria SOM specific interpratation of MAC record
-    if re.search('FRU Board Product Name: SM.*',fru):
+    if re.search('FRU Board Product Name: SM.*', fru):
         fru = fru.replace('FRU OEM MAC ID 0:', 'FRU OEM PS MAC ID 0:', 1)
     # Kria Carrier card specific interpretation of MAC record
     prod = re.search('FRU Board Product Name: SCK-(.*)-G', fru)
@@ -65,14 +70,17 @@ def mac_format(fru):
         fru = fru.replace('FRU OEM MAC ID 1:', 'FRU OEM PL MAC ID 1:', 1)
     return fru
 
+
 def free_form_format(fru):
     # Kria SOM specific interpratation of MAC record
     if re.search('FRU Board Product Name: SM.*', fru):
         fru = fru.replace('FRU OEM Memory:', 'FRU OEM Primary Boot Device:', 1)
-        fru = fru.replace('FRU OEM Memory:', 'FRU OEM Secondary Boot Device:', 1)
+        fru = fru.replace('FRU OEM Memory:',
+                          'FRU OEM Secondary Boot Device:', 1)
         fru = fru.replace('FRU OEM Memory:', 'FRU OEM PS DDR Memory:', 1)
         fru = fru.replace('FRU OEM Memory:', 'FRU OEM PL DDR Memory:', 1)
     return fru
+
 
 def boardid_format(fru):
     # Xilinx specific interpretation of custom board info
@@ -82,6 +90,7 @@ def boardid_format(fru):
     # Xilinx specific interpretation of free form record
     fru = free_form_format(fru)
     return fru
+
 
 def get_eeprom(args):
     eeprom = []
@@ -97,14 +106,15 @@ def get_eeprom(args):
 
     return eeprom
 
+
 def boardid(args):
     ignore = False
     if any('--ignore-errors' in arg for arg in args):
         ignore = True
 
     for file in get_eeprom(args):
-        ret, fru = subprocess.getstatusoutput(cmds['boardid'] + \
-            ' --fru-file=' + file + ' --interpret-oem-data')
+        ret, fru = subprocess.getstatusoutput(cmds['boardid'] +
+                                              ' --fru-file=' + file + ' --interpret-oem-data')
         if not ignore and ret != 0:
             print(fru)
             sys.exit('\nipmi-fru returned error code ' + str(ret))
@@ -112,6 +122,7 @@ def boardid(args):
             print('\n' + boardid_format(fru))
 
     print('')
+
 
 def product_name(args):
     ignore = False
@@ -122,8 +133,8 @@ def product_name(args):
     som = ''
     carrier = ''
     for file in get_eeprom(args):
-        ret, fru = subprocess.getstatusoutput(cmds['boardid'] + \
-            ' --fru-file=' + file + ' --interpret-oem-data')
+        ret, fru = subprocess.getstatusoutput(cmds['boardid'] +
+                                              ' --fru-file=' + file + ' --interpret-oem-data')
         if not ignore and ret != 0:
             raise RuntimeError('ipmi-fru returned error code ' + str(ret))
         elif fru:
@@ -147,11 +158,14 @@ def product_name(args):
 
     return prod
 
+
 def bootfw_status(args):
-    subprocess.run([cmds['bootfw_status'],'-p'])
+    subprocess.run([cmds['bootfw_status'], '-p'])
+
 
 def bootfw_update(args):
     subprocess.run([cmds['bootfw_update']]+args)
+
 
 def getpkgs(args):
     if ('-h' in args) or ('--help' in args):
@@ -163,49 +177,66 @@ def getpkgs(args):
         sys.exit("No valid product name found, can't search package feed")
     print("\nSearching package feed for packages compatible with: " + prod + '\n')
     if distro.id() == 'ubuntu':
-        subprocess.run('apt search xlnx-app-' + prod + '- 2>/dev/null',shell=True)
+        subprocess.run('apt search xlnx-app-' + prod +
+                       '- 2>/dev/null', shell=True)
     elif distro.id() == 'petalinux':
-        subprocess.run('dnf list --available | grep packagegroup-' + prod + '- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"',shell=True)
+        subprocess.run('dnf list --available | grep packagegroup-' + prod +
+                       '- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"', shell=True)
+
 
 def listapps(args):
-    subprocess.run([cmds['listapps'],'-listPackage'])
+    subprocess.run([cmds['listapps'], '-listPackage'])
+
 
 def loadapp(args):
-    subprocess.run([cmds['loadapp'],'-load']+args)
+    subprocess.run([cmds['loadapp'], '-load']+args)
+
 
 def unloadapp(args):
-    subprocess.run([cmds['unloadapp'],'-remove']+args)
+    subprocess.run([cmds['unloadapp'], '-remove']+args)
+
 
 def xlnx_platformstats(args):
     subprocess.run([cmds['xlnx_platformstats']]+args)
 
+
 def ddrqos(args):
     subprocess.run([cmds['ddrqos']]+args)
+
 
 def axiqos(args):
     subprocess.run([cmds['axiqos']]+args)
 
+
 def pwrctl(args):
     subprocess.run([cmds['pwrctl']]+args)
 
-def top(cmd,args):
+
+def top(cmd, args):
     globals()[cmd[0]](args)
+
 
 def desktop_disable(args):
     subprocess.run('systemctl isolate multi-user.target', shell=True)
 
+
 def desktop_enable(args):
     subprocess.run('systemctl isolate graphical.target', shell=True)
 
+
 def dp_unbind(args):
-    subprocess.run('echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind', shell=True)
+    subprocess.run(
+        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind', shell=True)
+
 
 def dp_bind(args):
-    subprocess.run('echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True)
+    subprocess.run(
+        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True)
+
 
 if __name__ == "__main__":
 
-    help_text="""
+    help_text = """
 boardid: Reads FRU data based on EEPROM or file and prints information in human readable format.
     --fru-file=<file>    Pass a <file> containing fru data
     --ignore-errors      Ignore errors returned by fru-ipmi and print returned output
@@ -247,8 +278,10 @@ dp_unbind: Unbind the display driver.
 dp_bind: Bind the display driver.
 """
 
-    parser = argparse.ArgumentParser(description=help_text, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','xlnx_platformstats','ddrqos','axiqos','pwrctl','desktop_disable','desktop_enable','dp_unbind','dp_bind'], type=str, nargs=1,help='Enter a function')
+    parser = argparse.ArgumentParser(
+        description=help_text, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('cmd', choices=['boardid', 'bootfw_status', 'bootfw_update', 'getpkgs', 'listapps', 'loadapp', 'unloadapp', 'xlnx_platformstats',
+                        'ddrqos', 'axiqos', 'pwrctl', 'desktop_disable', 'desktop_enable', 'dp_unbind', 'dp_bind'], type=str, nargs=1, help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
-    top(args.cmd,args.args)
+    top(args.cmd, args.args)
