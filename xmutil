@@ -6,7 +6,12 @@
 # SPDX-License-Identifier: MIT
 """
 
-import subprocess, argparse, distro, re, glob, sys
+import subprocess
+import argparse
+import re
+import glob
+import sys
+import distro
 
 cmds = { 'boardid':'/usr/sbin/ipmi-fru', \
 	'bootfw_status':'/usr/bin/image_update', \
