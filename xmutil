@@ -204,24 +204,50 @@ def dp_bind(args):
     subprocess.run('echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='\n\
-boardid: Reads FRU data based on EEPROM or file and prints information in human readable format.\n\t--fru-file=<file>\tPass a <file> containing fru data\n\t--ignore-errors\t\tIgnore errors returned by fru-ipmi and print returned output\n\n\
-bootfw_status: Prints Qspi MFG version and date info along with persistent state values.\n\n\
-bootfw_update: Updates the primary boot device with a new BOOT.BIN in the inactive partition (either A or B).\n\n\
-getpkgs: Queries Xilinx package feeds and provides summary of relevant packages for active platform based on board ID information.\n\t--fru-file=<file>\tPass a <file> containing fru data\n\t--ignore-errors\t\tIgnore errors returned by fru-ipmi and print returned output\n\n\
-listapps: Queries on target FW resource manager daemon of pre-built app bitstreams available on the platform and provides summary to CLI.\n\n\
-loadapp: Loads requested application configuration bitstream to programmable logic if the device is available.\n\n\
-unloadapp: Removes application bitstream. (Takes slot number, default 0) \n\n\
-xlnx_platformstats: Reads and prints a summary of the following performance related information:\n\tCPU Utilization for each configured CPU\n\tRAM utilization\n\tSwap memory Utilization\n\tSOM overall current, power, voltage utilization\n\tSysMon Temperatures(s)\n\tSOM power supply data summary reported by PMICs & ZU+ SysMon sources\n\n\
-ddrqos: Set QOS value for DDR slots on zynqmp platform\n\n\
-axiqos: Set QOS value for AXI ports on zynqmp platform. \n\n\
-pwrctl: PL power control utility.\n\n\
-desktop_disable: Disable the desktop.\n\n\
-desktop_enable: Enable the desktop.\n\n\
-dp_unbind: Unbind the display driver.\n\n\
-dp_bind: Bind the display driver.\n\n',\
 
-    formatter_class=argparse.RawTextHelpFormatter)
+    help_text="""
+boardid: Reads FRU data based on EEPROM or file and prints information in human readable format.
+    --fru-file=<file>    Pass a <file> containing fru data
+    --ignore-errors      Ignore errors returned by fru-ipmi and print returned output
+
+bootfw_status: Prints Qspi MFG version and date info along with persistent state values.
+
+bootfw_update: Updates the primary boot device with a new BOOT.BIN in the inactive partition (either A or B).
+
+getpkgs: Queries Xilinx package feeds and provides summary of relevant packages for active platform based on board ID information.
+    --fru-file=<file>    Pass a <file> containing fru data
+    --ignore-errors      Ignore errors returned by fru-ipmi and print returned output
+
+listapps: Queries on target FW resource manager daemon of pre-built app bitstreams available on the platform and provides summary to CLI.
+
+loadapp: Loads requested application configuration bitstream to programmable logic if the device is available.
+
+unloadapp: Removes application bitstream. (Takes slot number, default 0)
+
+xlnx_platformstats: Reads and prints a summary of the following performance related information:
+    CPU Utilization for each configured CPU
+    RAM utilization
+    Swap memory Utilization
+    SOM overall current, power, voltage utilization
+    SysMon Temperatures(s)
+    SOM power supply data summary reported by PMICs & ZU+ SysMon sources
+
+ddrqos: Set QOS value for DDR slots on zynqmp platform.
+
+axiqos: Set QOS value for AXI ports on zynqmp platform.
+
+pwrctl: PL power control utility.
+
+desktop_disable: Disable the desktop.
+
+desktop_enable: Enable the desktop.
+
+dp_unbind: Unbind the display driver.
+
+dp_bind: Bind the display driver.
+"""
+
+    parser = argparse.ArgumentParser(description=help_text, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('cmd', choices=['boardid','bootfw_status','bootfw_update','getpkgs','listapps','loadapp','unloadapp','xlnx_platformstats','ddrqos','axiqos','pwrctl','desktop_disable','desktop_enable','dp_unbind','dp_bind'], type=str, nargs=1,help='Enter a function')
     parser.add_argument('args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
