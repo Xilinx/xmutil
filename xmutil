@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 """
-# Copyright (C) 2010 - 2020 Xilinx, Inc.  All rights reserved.
+# Copyright (C) 2010 - 2021 Xilinx, Inc.  All rights reserved.
+# Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc.  All Rights Reserved.
 
 # SPDX-License-Identifier: MIT
 """
@@ -12,6 +13,10 @@ import re
 import glob
 import sys
 import distro
+import os.path
+from periphery import GPIO
+from periphery import I2C
+from periphery import MMIO
 
 cmds = {'boardid': '/usr/sbin/ipmi-fru',
         'bootfw_status': '/usr/bin/image_update',
@@ -22,7 +27,6 @@ cmds = {'boardid': '/usr/sbin/ipmi-fru',
         'xlnx_platformstats': '/usr/bin/xlnx_platformstats',
         'ddrqos': '/usr/bin/ddr-qos',
         'axiqos': '/usr/bin/axi-qos',
-        'pwrctl': '/usr/bin/kria-pwrctl',
         }
 
 
@@ -208,8 +212,94 @@ def axiqos(args):
     subprocess.run([cmds['axiqos']]+args)
 
 
+def pl_node_state_update(state):
+    # PMU call for PL node request/release
+    pm_dev = open("/sys/kernel/debug/zynqmp-firmware/pm", "w")
+    pm_dev.write("time echo " + state + " 69")
+
+
+def pl_sequencer_on():
+    gpio_out = GPIO("/dev/gpiochip1", 33, "out")
+    gpio_out.write(True)
+    gpio_out.close()
+    pl_node_state_update("pm_request_node")
+
+
+def pl_sequencer_off():
+    pl_node_state_update("pm_release_node")
+    gpio_out = GPIO("/dev/gpiochip1", 33, "out")
+    gpio_out.write(False)
+    gpio_out.close()
+
+
+def pl_sequencer_status():
+    #To get status of the PL sequencer we need to read the value of GPIO pin (MIO33),
+    #but that GPIO configured as output, the only way to get the status of the GPIO is by
+    #reading the data register(0xFF0A0044), here we are doing that using MMIO.
+    gpio_mmio = MMIO(0xFF0A0044, 4)
+    reg_value = gpio_mmio.read32(0x00)
+    gpio_mmio.close()
+    if ((reg_value >> 7) & 1) == 0:
+        print("PL sequencer is off \n")
+    elif ((reg_value >> 7) & 1) == 1:
+        print("PL sequencer is on \n")
+    else:
+        print("Unknown PL sequencer state, reg_value: ", reg_value, '\n')
+
+
+def pl_sequencer_on_via_i2c():
+    i2c = I2C("/dev/i2c-1")
+    msgs = [I2C.Message([0x08, 0x3E], read=False)]
+    # Write '0x3E' to PL sequencer power register for PL switch on
+    i2c.transfer(0x68, msgs)
+    i2c.close()
+    pl_node_state_update("pm_request_node")
+
+
+def pl_sequencer_off_via_i2c():
+    pl_node_state_update("pm_release_node")
+    i2c = I2C("/dev/i2c-1")
+    # Write '0x00' to PL sequencer power register for PL switch off
+    msgs = [I2C.Message([0x08, 0x00], read=False)]
+    i2c.transfer(0x68, msgs)
+    i2c.close()
+
+
+def pl_sequencer_status_via_i2c():
+    i2c = I2C("/dev/i2c-1")
+    msgs = [I2C.Message([0xF5]), I2C.Message([0x00], read=True)]
+    i2c.transfer(0x68, msgs)
+    i2c.close()
+    if msgs[1].data[0] == 0x9a:
+        print("PL sequencer is on \n")
+    elif msgs[1].data[0] == 0x04:
+        print("PL sequencer is off \n")
+    else:
+        print("Unknown PL sequencer state: ", hex(msgs[1].data[0]), "\n")
+
+
 def pwrctl(args):
-    subprocess.run([cmds['pwrctl']]+args)
+    try:
+        product = product_name(args + [' --ignore-errors'])
+    except:
+        sys.exit("Error during product name fetching, can't perform pwrctl operation")
+
+    if product.find('K26') != -1 or product.find('kr260') != -1:
+        if sys.argv[2] == "--off":
+            pl_sequencer_off_via_i2c()
+        elif sys.argv[2] == "--on":
+            pl_sequencer_on_via_i2c()
+        elif sys.argv[2] == "--status":
+            pl_sequencer_status_via_i2c()
+    elif product.find('K24') != -1 or product.find('kd240') != -1:
+        if sys.argv[2] == "--off":
+            pl_sequencer_off()
+        elif sys.argv[2] == "--on":
+            pl_sequencer_on()
+        elif sys.argv[2] == "--status":
+            pl_sequencer_status()
+    else:
+        print('Unkown device: xmutil pwrctl supports K24/K26 only\n')
 
 
 def top(cmd, args):
@@ -268,6 +358,9 @@ ddrqos: Set QOS value for DDR slots on zynqmp platform.
 axiqos: Set QOS value for AXI ports on zynqmp platform.
 
 pwrctl: PL power control utility.
+    --off    PL shutdown
+    --on     PL powerup
+    --status PL power status
 
 desktop_disable: Disable the desktop.
 

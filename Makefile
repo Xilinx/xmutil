@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 #
 # Copyright (c) 2021 Xilinx, Inc.
+# Copyright (c) 2022 - 2023 Advanced Micro Devices, Inc.  All Rights Reserved.
 #
 
 INSTALL_PROGRAM ?= install
@@ -10,7 +11,6 @@ all:
 
 install:
 	$(INSTALL_PROGRAM) -D -m 755 xmutil $(DESTDIR)$(bindir)/xmutil
-	$(INSTALL_PROGRAM) -D -m 755 kria-pwrctl $(DESTDIR)$(bindir)/kria-pwrctl
 
 clean:
 
