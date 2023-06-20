@@ -176,7 +176,7 @@ def getpkgs(args):
         print("\ngetpkgs will use ipmi-fru to determine the target platform\nand search the package feed for compatible packagegroups\n")
         exit()
     try:
-        prod = product_name(args)
+        prod = product_name(args + [' --ignore-errors'])
     except:
         sys.exit("No valid product name found, can't search package feed")
     print("\nSearching package feed for packages compatible with: " + prod + '\n')
