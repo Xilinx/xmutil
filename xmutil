@@ -284,6 +284,9 @@ def pwrctl(args):
     except:
         sys.exit("Error during product name fetching, can't perform pwrctl operation")
 
+    if len(sys.argv) < 3:
+        sys.exit("No argument provided to xmutil pwrctl. Run xmutil --help for usage.")
+
     if product.find('K26') != -1 or product.find('kr260') != -1:
         if sys.argv[2] == "--off":
             pl_sequencer_off_via_i2c()
