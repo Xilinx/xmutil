@@ -215,7 +215,8 @@ def axiqos(args):
 def pl_node_state_update(state):
     # PMU call for PL node request/release
     pm_dev = open("/sys/kernel/debug/zynqmp-firmware/pm", "w")
-    pm_dev.write("time echo " + state + " 69")
+    pm_dev.write(state + " 69")
+    pm_dev.close()
 
 
 def pl_sequencer_on():
