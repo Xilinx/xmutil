@@ -233,23 +233,32 @@ def pl_sequencer_off():
     gpio_out.close()
 
 
+def fetch_i2c_node(i2c_master):
+    os.chdir("/sys/devices/platform/axi/"+i2c_master+".i2c/")
+    i2c_dir = glob.glob('i2c-*')
+    return ("/dev/"+' '.join([str(elem) for elem in i2c_dir]))
+
+
 def pl_sequencer_status():
-    #To get status of the PL sequencer we need to read the value of GPIO pin (MIO33),
-    #but that GPIO configured as output, the only way to get the status of the GPIO is by
-    #reading the data register(0xFF0A0044), here we are doing that using MMIO.
-    gpio_mmio = MMIO(0xFF0A0044, 4)
-    reg_value = gpio_mmio.read32(0x00)
-    gpio_mmio.close()
-    if ((reg_value >> 7) & 1) == 0:
-        print("PL sequencer is off \n")
-    elif ((reg_value >> 7) & 1) == 1:
+    #Pass ff030000 adrress of i2c master
+    i2c = I2C(fetch_i2c_node("ff030000"))
+    #Read 0xF2 register of PL Sequencer
+    msgs = [I2C.Message([0xF2]), I2C.Message([0x00], read=True)]
+    #0x68 is address of PL Sequencer
+    i2c.transfer(0x68, msgs)
+    i2c.close()
+    #Check 4th bit of 0XF2 register which is VCCOEN_PL
+    if ((msgs[1].data[0] >> 4) & 1) == 1:
         print("PL sequencer is on \n")
+    elif ((msgs[1].data[0] >> 4) & 1) == 0:
+        print("PL sequencer is off \n")
     else:
-        print("Unknown PL sequencer state, reg_value: ", reg_value, '\n')
+        print("Unknown PL sequencer state, reg_value: ", hex(msgs[1].data[0]), "\n")
 
 
 def pl_sequencer_on_via_i2c():
-    i2c = I2C("/dev/i2c-1")
+    #Pass ff030000 adrress of i2c master
+    i2c = I2C(fetch_i2c_node("ff030000"))
     msgs = [I2C.Message([0x08, 0x3E], read=False)]
     # Write '0x3E' to PL sequencer power register for PL switch on
     i2c.transfer(0x68, msgs)
@@ -259,7 +268,8 @@ def pl_sequencer_on_via_i2c():
 
 def pl_sequencer_off_via_i2c():
     pl_node_state_update("pm_release_node")
-    i2c = I2C("/dev/i2c-1")
+    #Pass ff030000 adrress of i2c master
+    i2c = I2C(fetch_i2c_node("ff030000"))
     # Write '0x00' to PL sequencer power register for PL switch off
     msgs = [I2C.Message([0x08, 0x00], read=False)]
     i2c.transfer(0x68, msgs)
@@ -267,7 +277,8 @@ def pl_sequencer_off_via_i2c():
 
 
 def pl_sequencer_status_via_i2c():
-    i2c = I2C("/dev/i2c-1")
+    #Pass ff030000 adrress of i2c master
+    i2c = I2C(fetch_i2c_node("ff030000"))
     msgs = [I2C.Message([0xF5]), I2C.Message([0x00], read=True)]
     i2c.transfer(0x68, msgs)
     i2c.close()
