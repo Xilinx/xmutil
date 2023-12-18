@@ -220,17 +220,11 @@ def pl_node_state_update(state):
 
 
 def pl_sequencer_on():
-    gpio_out = GPIO("/dev/gpiochip1", 33, "out")
-    gpio_out.write(True)
-    gpio_out.close()
     pl_node_state_update("pm_request_node")
 
 
 def pl_sequencer_off():
     pl_node_state_update("pm_release_node")
-    gpio_out = GPIO("/dev/gpiochip1", 33, "out")
-    gpio_out.write(False)
-    gpio_out.close()
 
 
 def fetch_i2c_node(i2c_master):
