@@ -380,6 +380,9 @@ dp_unbind: Unbind the display driver.
 dp_bind: Bind the display driver.
 """
 
+    if os.geteuid() != 0:
+        sys.exit("xmutil should be called with root privileges. Please try again using 'sudo'.")
+
     parser = argparse.ArgumentParser(
         description=help_text, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('cmd', choices=['boardid', 'bootfw_status', 'bootfw_update', 'getpkgs', 'listapps', 'loadapp', 'unloadapp', 'xlnx_platformstats',
