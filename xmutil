@@ -185,7 +185,7 @@ def getpkgs(args):
                        '- 2>/dev/null', shell=True)
     elif distro.id() == 'petalinux':
         subprocess.run('dnf list --available | grep packagegroup-' + prod +
-                       '- | awk "!/-dev\./&&!/-lic\./&&!/-dbg\./&&!/-ptest\./"', shell=True)
+                       '- | awk "!/-dev./&&!/-lic./&&!/-dbg./&&!/-ptest./"', shell=True)
 
 
 def listapps(args):
