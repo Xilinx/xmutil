@@ -17,11 +17,11 @@ xmutil boardid
 
 	Reads all board EEPROM contents. Prints information summary in human readable structure to CLI.
 
-xmutil bootfw
+xmutil bootfw_status
 
 	Reads primary boot device information. Prints A/B status information, image IDs, and checksums to CLI.
 
-xmutil bootfwupd
+xmutil bootfw_update
 
 	Updates the primary boot device with a new boot.bin in the inactive partition (either A or B).
 
@@ -41,7 +41,7 @@ xmutil unloadapp
 
 	Removes application bitstream. (Takes slot number, default 0)
 
-xmutil perfmon
+xmutil xlnx_platformstats
 
 	Reads and prints a summary of the following performance related information: 
 
