@@ -164,11 +164,13 @@ def product_name(args):
 
 
 def bootfw_status(args):
-    subprocess.run([cmds['bootfw_status'], '-p'])
+    retval = subprocess.run([cmds['bootfw_status'], '-p'], check=True)
+    return retval.returncode
 
 
 def bootfw_update(args):
-    subprocess.run([cmds['bootfw_update']]+args)
+    retval = subprocess.run([cmds['bootfw_update']]+args, check=True)
+    return retval.returncode
 
 
 def getpkgs(args):
@@ -181,35 +183,42 @@ def getpkgs(args):
         sys.exit("No valid product name found, can't search package feed")
     print("\nSearching package feed for packages compatible with: " + prod + '\n')
     if distro.id() == 'ubuntu':
-        subprocess.run('apt search xlnx-app-' + prod +
-                       '- 2>/dev/null', shell=True)
+        retval = subprocess.run('apt search xlnx-app-' + prod +
+                       '- 2>/dev/null', shell=True, check=True)
     elif distro.id() == 'petalinux':
-        subprocess.run('dnf list --available | grep packagegroup-' + prod +
-                       '- | awk "!/-dev./&&!/-lic./&&!/-dbg./&&!/-ptest./"', shell=True)
+        retval = subprocess.run('dnf list --available | grep packagegroup-' + prod +
+                       '- | awk "!/-dev./&&!/-lic./&&!/-dbg./&&!/-ptest./"', shell=True, check=True)
+    return retval.returncode
 
 
 def listapps(args):
-    subprocess.run([cmds['listapps'], '-listPackage'])
+    retval = subprocess.run([cmds['listapps'], '-listPackage'], check=True)
+    return retval.returncode
 
 
 def loadapp(args):
-    subprocess.run([cmds['loadapp'], '-load']+args)
+    retval = subprocess.run([cmds['loadapp'], '-load']+args, check=True)
+    return retval.returncode
 
 
 def unloadapp(args):
-    subprocess.run([cmds['unloadapp'], '-remove']+args)
+    retval = subprocess.run([cmds['unloadapp'], '-remove']+args, check=True)
+    return retval.returncode
 
 
 def xlnx_platformstats(args):
-    subprocess.run([cmds['xlnx_platformstats']]+args)
+    retval = subprocess.run([cmds['xlnx_platformstats']]+args, check=True)
+    return retval.returncode
 
 
 def ddrqos(args):
-    subprocess.run([cmds['ddrqos']]+args)
+    retval = subprocess.run([cmds['ddrqos']]+args, check=True)
+    return retval.returncode
 
 
 def axiqos(args):
-    subprocess.run([cmds['axiqos']]+args)
+    retval = subprocess.run([cmds['axiqos']]+args, check=True)
+    return retval.returncode
 
 
 def pl_node_state_update(state):
@@ -316,21 +325,25 @@ def top(cmd, args):
 
 
 def desktop_disable(args):
-    subprocess.run('systemctl isolate multi-user.target', shell=True)
+    retval = subprocess.run('systemctl isolate multi-user.target', shell=True, check=True)
+    return retval.returncode
 
 
 def desktop_enable(args):
-    subprocess.run('systemctl isolate graphical.target', shell=True)
+    retval = subprocess.run('systemctl isolate graphical.target', shell=True, check=True)
+    return retval.returncode
 
 
 def dp_unbind(args):
-    subprocess.run(
-        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind', shell=True)
+    retval = subprocess.run(
+        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind', shell=True, check=True)
+    return retval.returncode
 
 
 def dp_bind(args):
-    subprocess.run(
-        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True)
+    retval = subprocess.run(
+        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True, check=True)
+    return retval.returncode
 
 
 if __name__ == "__main__":
