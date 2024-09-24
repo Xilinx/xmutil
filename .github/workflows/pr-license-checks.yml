@@ -1,0 +1,89 @@
+name: PR License Check
+
+on:
+  pull_request_target:
+    branches:
+      - '**'
+
+jobs:
+  run-license-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Checkout yocto-scripts repo
+      uses: actions/checkout@v2
+      with:
+        repository: Xilinx/yocto-scripts
+        path: yocto-scripts
+        ref: kria-apps
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9.12'
+    
+    - name: Install dependencies
+      run: python3 -m pip install requests
+
+    - name: Run standardlicense.py and capture output
+      id: license_check
+      env:
+        PAT_TOKEN: ${{ secrets.GH_PAT }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        GH_REPO_NAME: ${{ github.repository }}
+      run: |
+        echo "PR_NUMBER: $PR_NUMBER"
+        echo "GH_REPO_NAME: $GH_REPO_NAME"
+        cp yocto-scripts/xscc.awk .
+        output=$(python3 yocto-scripts/standardlicense.py $PR_NUMBER $PAT_TOKEN $GH_REPO_NAME)
+        echo "$output" > license_result.txt
+        echo "::set-output name=output::$output"
+
+    - name: Check license result
+      id: check_result
+      run: |
+        output=$(cat license_result.txt)
+        if [[ "$output" == *"License Check is Passed"* ]] || [[ "$output" == *"Skipping License Check for this File"* ]] || [[ "$output" == *"This is the Approved License. Hence, License Check is Passed"* ]]; then
+          echo "License check passed."
+        else
+          echo "License check failed."
+          exit 1
+        fi
+
+    - name: Post comment on GitHub
+      if: always()
+      run: |
+        COMMENT_BODY=$(cat license_result.txt)
+        # Replace newline characters with '\n' to properly format the JSON payload
+        COMMENT_BODY=$(echo "$COMMENT_BODY" | sed 's/$/\\n/g' | tr -d '\n')
+        echo "Posting comment to PR#${{ github.event.pull_request.number }}:"
+        echo "Posting comment on this repo#${{ github.repository }}:"
+        echo "$COMMENT_BODY"
+        echo "JSON Payload:"
+        echo "{\"body\": \"$COMMENT_BODY\"}"
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${{ secrets.GH_PAT }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"body\": \"$COMMENT_BODY\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+
+    - name: Post status to GitHub
+      if: always()
+      run: |
+        output=$(cat license_result.txt)
+        state="failure"
+        description="License check failed."
+        if [[ "$output" == *"License Check is Passed"* ]] || [[ "$output" == *"Skipping License Check for this File"* ]] || [[ "$output" == *"This is the Approved License. Hence, License Check is Passed"* ]]; then
+          state="success"
+          description="License check passed."
+        fi
+
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GH_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d "{\"state\": \"$state\", \"description\": \"$description\", \"context\": \"license-check\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}"
