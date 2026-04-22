@@ -2,7 +2,7 @@
 
 """
 # Copyright (C) 2010 - 2021 Xilinx, Inc.  All rights reserved.
-# Copyright (C) 2022 - 2023 Advanced Micro Devices, Inc.  All Rights Reserved.
+# Copyright (C) 2022 - 2026 Advanced Micro Devices, Inc.  All Rights Reserved.
 
 # SPDX-License-Identifier: MIT
 """
@@ -191,18 +191,63 @@ def getpkgs(args):
     return retval.returncode
 
 
+def get_dfx_version():
+    # Determine which version of dfx-mgr-client is installed by checking its help output
+    retval = subprocess.run(['dfx-mgr-client', '-h'], capture_output=True, text=True)
+    help_text = retval.stdout + retval.stderr
+    if '-loadByName' in help_text:
+        return 'post_v2026.1'
+    else:
+        return 'pre_v2025.2'
+
+
+def get_loaded_accel():
+    # Parse dfx-mgr-client -listPackage output to find the currently loaded accelerator
+    retval = subprocess.run([cmds['listapps'], '-listPackage'], capture_output=True, text=True)
+    lines = retval.stdout.splitlines()
+    if not lines:
+        return None
+    header_fields = lines[0].split()
+    try:
+        id_idx = header_fields.index('ID')
+        slot_idx = header_fields.index('slotLoc')
+    except ValueError:
+        return None
+    for line in lines[1:]:
+        fields = line.split()
+        try:
+            active_slot = int(fields[slot_idx])
+            if active_slot == 0:
+                return fields[id_idx]
+        except (ValueError, IndexError):
+            continue
+    return None
+
+
 def listapps(args):
     retval = subprocess.run([cmds['listapps'], '-listPackage'], check=True)
     return retval.returncode
 
 
 def loadapp(args):
-    retval = subprocess.run([cmds['loadapp'], '-load']+args, check=True)
+    if get_dfx_version() == 'pre_v2025.2':
+        retval = subprocess.run([cmds['loadapp'], '-load']+args, check=True)
+    else:
+        retval = subprocess.run([cmds['loadapp'], '-loadByName']+args, check=True)
     return retval.returncode
 
 
 def unloadapp(args):
-    retval = subprocess.run([cmds['unloadapp'], '-remove']+args, check=True)
+    if get_dfx_version() == 'pre_v2025.2':
+        retval = subprocess.run([cmds['unloadapp'], '-remove']+args, check=True)
+    else:
+        if args:
+            accel = args[0]
+        else:
+            accel = get_loaded_accel()
+            if accel is None:
+                sys.exit("No accelerator is currently loaded")
+        retval = subprocess.run([cmds['unloadapp'], '-unload', accel], check=True)
     return retval.returncode
 
 
