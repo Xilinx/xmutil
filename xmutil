@@ -205,15 +205,18 @@ def get_loaded_accel():
     # Parse dfx-mgr-client -listPackage output to find the currently loaded accelerator
     retval = subprocess.run([cmds['listapps'], '-listPackage'], capture_output=True, text=True)
     lines = retval.stdout.splitlines()
-    if not lines:
+    # The table may be preceded by other output, so locate the header row first
+    header_row = id_idx = slot_idx = None
+    for i, line in enumerate(lines):
+        fields = line.split()
+        if 'ID' in fields and 'slotLoc' in fields:
+            header_row = i
+            id_idx = fields.index('ID')
+            slot_idx = fields.index('slotLoc')
+            break
+    if header_row is None:
         return None
-    header_fields = lines[0].split()
-    try:
-        id_idx = header_fields.index('ID')
-        slot_idx = header_fields.index('slotLoc')
-    except ValueError:
-        return None
-    for line in lines[1:]:
+    for line in lines[header_row + 1:]:
         fields = line.split()
         try:
             active_slot = int(fields[slot_idx])
