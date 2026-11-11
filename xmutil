@@ -382,16 +382,53 @@ def desktop_enable(args):
     return retval.returncode
 
 
+def dp_device_path():
+    devices = sorted(glob.glob('/sys/bus/platform/devices/*.display'))
+    if not devices:
+        sys.exit('No DisplayPort subsystem device found on this platform.')
+    return devices[0]
+
+
+def dp_driver_path(device):
+    link = os.path.join(device, 'driver')
+    if os.path.islink(link):
+        return os.path.realpath(link)
+    # Already unbound, so derive the driver name from the device tree
+    # compatible string, e.g. 'xlnx,zynqmp-dpsub-1.7' -> 'zynqmp-dpsub'.
+    try:
+        with open(os.path.join(device, 'of_node', 'compatible')) as f:
+            compatibles = f.read().split('\0')
+    except OSError:
+        compatibles = []
+    for compatible in compatibles:
+        name = compatible.strip().split(',')[-1]
+        while name:
+            path = os.path.join('/sys/bus/platform/drivers', name)
+            if os.path.isdir(path):
+                return path
+            name = name.rpartition('-')[0]
+    sys.exit('No driver found for %s.' % os.path.basename(device))
+
+
+def dp_set_binding(action):
+    device = dp_device_path()
+    name = os.path.basename(device)
+    driver = dp_driver_path(device)
+    try:
+        with open(os.path.join(driver, action), 'w') as f:
+            f.write(name)
+    except OSError as err:
+        sys.exit('Failed to %s %s on %s: %s' %
+                 (action, name, os.path.basename(driver), err))
+    return 0
+
+
 def dp_unbind(args):
-    retval = subprocess.run(
-        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/unbind', shell=True, check=True)
-    return retval.returncode
+    return dp_set_binding('unbind')
 
 
 def dp_bind(args):
-    retval = subprocess.run(
-        'echo -n fd4a0000.display > /sys/bus/platform/drivers/zynqmp-display/bind', shell=True, check=True)
-    return retval.returncode
+    return dp_set_binding('bind')
 
 
 if __name__ == "__main__":
