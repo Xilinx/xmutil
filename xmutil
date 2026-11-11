@@ -185,9 +185,12 @@ def getpkgs(args):
     if distro.id() == 'ubuntu':
         retval = subprocess.run('apt search xlnx-app-' + prod +
                        '- 2>/dev/null', shell=True, check=True)
-    elif distro.id() == 'petalinux':
+    elif distro.id() in ('petalinux', 'amd-edf', 'amd-edf-small'):
         retval = subprocess.run('dnf list --available | grep packagegroup-' + prod +
                        '- | awk "!/-dev./&&!/-lic./&&!/-dbg./&&!/-ptest./"', shell=True, check=True)
+    else:
+        sys.exit("Unsupported distribution: '" + distro.id() +
+                 "'. getpkgs supports ubuntu, petalinux, amd-edf, amd-edf-small.")
     return retval.returncode
 
 
